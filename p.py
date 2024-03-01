@@ -34,7 +34,7 @@ intents.message_content = True
 intents.members = True
 intents.reactions = True
 
-TOKEN = "MTE1NTc5MzQ2NjQyMTQyODM1NQ.GJ2g__.TeO559PcPLSrdfLG4Ikxas5d4QCnUApj50Uw8o"
+TOKEN = "PRIVATE INFO"
 bot = discord.ext.commands.Bot(command_prefix='!', intents=intents)
 @bot.event
 async def on_ready():
