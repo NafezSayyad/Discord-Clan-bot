@@ -9,9 +9,9 @@ def main():
         load_dotenv()
     from setup import bot
 
-    from Commands import help, teams, join, about, socials, createRole
+    from Commands import Music,itemPrice,moderateComm,rankAPI, createRole
     import events
-    from events import welcomemessage, nameChange
+    from events import memberJoin, nameChange
     TOKEN=getenv("TOKEN")
     bot.run(TOKEN)
 
