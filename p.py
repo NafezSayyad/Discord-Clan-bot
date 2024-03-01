@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands, tasks
 from discord.ui import Button
+# from discord_slash import cog_ext, SlashContext
+# from wavelink.ext import wavelink
+
 import requests
 import asyncio
 from rswiki_wrapper.osrs import Mapping, Latest
@@ -239,7 +242,8 @@ def format_price(price):
 async def get_price(ctx, *, item_name):
     # Query the item mapping to get all item names
     mapping_query = Mapping(user_agent=user_agent)
-    item_mapping = {item['name'].lower(): item['id'] for item in mapping_query.content}
+    # Filter out items that contain 'corrupted' in their names
+    item_mapping = {item['name'].lower(): item['id'] for item in mapping_query.content if 'corrupted' not in item['name'].lower()}
 
     # Use fuzzy matching to find the closest matching item name
     matches = process.extract(item_name.lower(), item_mapping.keys(), limit=1)
@@ -272,6 +276,7 @@ async def get_price(ctx, *, item_name):
             await ctx.send(f"Unable to retrieve price information for {closest_match}")
     else:
         await ctx.send(f"Item '{item_name}' not found. Did you mean '{closest_match}'?")
+
 
     
 
@@ -563,20 +568,27 @@ async def extract(ctx, group_id: int):
 async def modify(ctx, group_id: int):
     # Read the JSON file
     file_path = f"extracted_info_{group_id}.json"
+    output_file_path = f"role_modifications_{group_id}.txt"
+
     try:
         with open(file_path, "r") as file:
             extracted_info = json.load(file)
 
         # Mapping of group roles to Discord server role IDs
         role_mapping = {
-            "Bronze": 1177977176642048090,
-            "Iron": 1177977336822513825,
-            "Steel": 1177977306011148338,
-            "Mithril": 1177977612606373930,
-            "Adamant": 1177977267998167070,
-            "Rune": 1177977235974660137,
-            "Gold": 1180581321718902835,
+            "Bronze": 1135088824985325609,
+            "Iron": 1135088902936461342,
+            "Steel": 1135089239479042060,
+            "Mithril": 1135089304796921956,
+            "Adamant": 1135089559756091513,
+            "Rune": 1135089678958215169,
+            "Gold": 1135089866741395517,
+            "Dragon": 1135089747736399953,
+            "Gold": 1135089866741395517,
         }
+
+        # List to store information about modified roles
+        role_modifications = []
 
         # Iterate through extracted information and modify Discord server roles
         for player_info in extracted_info:
@@ -597,22 +609,26 @@ async def modify(ctx, group_id: int):
                         try:
                             await member.add_roles(role)
                             print(f"Assigned role {role.name} to {member.display_name}")
-                            await ctx.send(f"Modified roles for {member.display_name}: Added role {role.name}")
+                            role_modifications.append(f"Modified roles for {member.display_name}: Added role {role.name}")
                         except discord.Forbidden:
-                            print(f"Insufficient permissions to modify roles for {member.display_name}")
-                            await ctx.send(f"Error: Insufficient permissions to modify roles for {member.display_name}")
+                            role_modifications.append(f"Error: Insufficient permissions to modify roles for {member.display_name}")
                     else:
-                        print(f"Role {group_role} not found in the server.")
-                        await ctx.send(f"Error: Role {group_role} not found in the server.")
+                        role_modifications.append(f"Error: Role {group_role} not found in the server.")
                 else:
-                    print(f"No role mapping found for {group_role}")
-                    await ctx.send(f"Error: No role mapping found for {group_role}")
+                    role_modifications.append(f"Error: No role mapping found for {group_role}")
             else:
-                print(f"Member not found for display name: {display_name}")
+                role_modifications.append(f"Member not found for display name: {display_name}")
 
-        await ctx.send("Role modification process completed.")
+        # Write the role modifications to a text file
+        with open(output_file_path, "w") as output_file:
+            for modification in role_modifications:
+                output_file.write(modification + "\n")
+
+        await ctx.send(f"Role modification process completed. Role modifications saved to {output_file_path}")
+
     except FileNotFoundError:
         await ctx.send(f"Error: File not found. Please use the !extract command first.")
+
 
 
 @bot.command(name='ban')
